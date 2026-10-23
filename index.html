@@ -1,23 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Water Quest</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
 </head>
+
 <body>
-  <div class="container">
+  <main class="container">
+    <img
+      class="brand-logo"
+      src="img/cw_logo_horizontal.png"
+      alt="charity: water"
+    >
+
     <h1>Water Quest</h1>
-    <p class="game-instructions">Collect 20 items to complete the game!</p>
+
+    <p class="game-instructions">
+      Collect at least <strong>20 points</strong> in 30 seconds!
+      <br>
+      Yellow cans: +1 point · Dirty water: −1 point
+    </p>
+
     <div class="stats">
-      <p>Cans Collected: <span id="current-cans">0</span></p>
+      <p>Score: <span id="current-cans">0</span></p>
       <p>Time Left: <span id="timer">30</span>s</p>
     </div>
-    <div id="achievements" class="achievement"></div>
-    <div class="game-grid"></div>
-    <button id="start-game">Start Game</button>
-  </div>
-  <script src="script.js"></script>
+
+    <div
+      id="achievements"
+      class="achievement"
+      role="status"
+      aria-live="polite"
+    >
+      Press Start Game to play!
+    </div>
+
+    <div class="game-grid" aria-label="Water Quest game board"></div>
+
+    <div class="controls">
+      <button id="start-game" type="button">Start Game</button>
+      <button id="reset-game" type="button">Reset</button>
+    </div>
+
+    <p class="mission">
+      Inspired by charity: water’s mission to bring clean and safe
+      drinking water to people around the world.
+    </p>
+
+    <a
+      href="https://www.charitywater.org/"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Learn about charity: water
+    </a>
+
+    <p class="disclaimer">
+      Independent student game prototype. Game points do not represent donations.
+    </p>
+  </main>
+
+  <div id="confetti" aria-hidden="true"></div>
 </body>
 </html>
