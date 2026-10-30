@@ -1,9 +1,10 @@
-/* charity: water-inspired colors */
+/* A clean sans-serif stack and charity: water-inspired colors. */
 :root {
   --yellow: #ffc907;
   --blue: #2e9df7;
   --dark: #222;
   --light-blue: #e7f4ff;
+  --muted: #626262;
 }
 
 * {
@@ -13,22 +14,22 @@
 body {
   margin: 0;
   padding: 24px;
-  background-color: #fff9e6;
+  background: #fff9e6;
   color: var(--dark);
-  font-family: Arial, sans-serif;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
 }
 
 .container {
   max-width: 650px;
   margin: 20px auto;
   padding: 32px;
-  background-color: white;
+  background: white;
+  border-top: 8px solid var(--yellow);
   border-radius: 16px;
   text-align: center;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 8%);
 }
 
-/* Uses your supplied logo */
 .brand-logo {
   display: block;
   width: 220px;
@@ -37,9 +38,18 @@ body {
   margin: 0 auto 24px;
 }
 
+.eyebrow {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
 h1 {
-  margin: 12px 0;
-  font-size: 42px;
+  margin: 10px 0;
+  font-size: clamp(34px, 8vw, 46px);
+  letter-spacing: -1.5px;
 }
 
 .game-instructions {
@@ -47,32 +57,142 @@ h1 {
   line-height: 1.7;
 }
 
+.settings {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.difficulty-setting {
+  text-align: left;
+}
+
+.difficulty-setting label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+select,
+#sound-toggle {
+  min-height: 44px;
+  padding: 10px 14px;
+  background: white;
+  color: var(--dark);
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font: inherit;
+}
+
+select {
+  min-width: 160px;
+  cursor: pointer;
+}
+
+select:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+#sound-toggle[aria-pressed="true"] {
+  background: var(--light-blue);
+  border-color: var(--blue);
+}
+
+.level-description {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .stats {
   display: flex;
   justify-content: space-around;
-  gap: 12px;
-  padding: 16px;
-  margin: 24px 0 16px;
-  background-color: var(--light-blue);
+  gap: 8px;
+  padding: 16px 10px;
+  margin: 20px 0 16px;
+  background: var(--light-blue);
   border-radius: 10px;
-  font-weight: bold;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .stats p {
   margin: 0;
 }
 
+.time-warning {
+  color: #a02819;
+}
+
+.progress-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+progress {
+  display: block;
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  appearance: none;
+  border: none;
+  border-radius: 20px;
+  background: #edf2f4;
+}
+
+progress::-webkit-progress-bar {
+  background: #edf2f4;
+  border-radius: 20px;
+}
+
+progress::-webkit-progress-value {
+  background: var(--yellow);
+  border-radius: 20px;
+}
+
+progress::-moz-progress-bar {
+  background: var(--yellow);
+  border-radius: 20px;
+}
+
 .achievement {
-  min-height: 64px;
-  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 78px;
+  margin: 14px 0;
+  padding: 12px;
+  background: #f7f9fa;
+  border-radius: 10px;
+  font-size: 14px;
   line-height: 1.5;
+}
+
+.achievement.success {
+  background: #e8f6e9;
+  color: #245b29;
+}
+
+.achievement.warning {
+  background: #fff0df;
+  color: #7b4316;
 }
 
 .game-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  max-width: 440px;
+  max-width: 420px;
   margin: 12px auto;
 }
 
@@ -85,7 +205,7 @@ h1 {
   min-width: 0;
   aspect-ratio: 1;
   padding: 10px;
-  background-color: #edf2f4;
+  background: #edf2f4;
   border: 2px solid transparent;
   border-radius: 12px;
 }
@@ -96,21 +216,26 @@ h1 {
 }
 
 .grid-cell.has-can {
-  background-color: #fff3bc;
+  background: #fff3bc;
+  border-color: #f4d86b;
 }
 
 .grid-cell.has-dirty-water {
-  background-color: #f4e5d8;
+  background: #f4e5d8;
+  border-color: #d9b99c;
 }
 
-/* Uses your supplied water-can image */
+.grid-cell:not(:disabled):active {
+  transform: scale(0.95);
+}
+
 .water-can {
   display: block;
   width: 75%;
   height: 75%;
   object-fit: contain;
   pointer-events: none;
-  animation: pop-up 0.2s ease-out;
+  animation: pop-up 0.16s ease-out;
 }
 
 .dirty-water {
@@ -124,8 +249,14 @@ h1 {
   bottom: 8px;
   color: #704321;
   font-size: 10px;
-  font-weight: bold;
+  font-weight: 700;
   pointer-events: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .controls {
@@ -135,30 +266,26 @@ h1 {
   margin-top: 24px;
 }
 
-button {
-  font: inherit;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
 .controls button {
+  min-height: 46px;
   padding: 12px 24px;
   border: none;
   border-radius: 8px;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 #start-game {
-  background-color: var(--yellow);
+  background: var(--yellow);
   color: var(--dark);
 }
 
 #reset-game {
-  background-color: var(--light-blue);
+  background: var(--light-blue);
   color: var(--dark);
 }
 
-.controls button:hover:not(:disabled) {
+.controls button:hover:not(:disabled),
+#sound-toggle:hover {
   filter: brightness(0.95);
 }
 
@@ -168,30 +295,64 @@ button {
 }
 
 button:focus-visible,
+select:focus-visible,
 a:focus-visible {
   outline: 3px solid var(--blue);
   outline-offset: 4px;
 }
 
-.mission {
-  margin-top: 28px;
+.mission-card {
+  margin-top: 30px;
+  padding: 20px;
+  background: #fff9e6;
+  border-radius: 12px;
+}
+
+.mission-card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.mission-card p {
+  margin: 0;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.7;
+}
+
+footer {
+  margin-top: 22px;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 a {
   color: #175b89;
+  font-size: 14px;
+  font-weight: 700;
   text-underline-offset: 3px;
 }
 
-.disclaimer {
-  margin-top: 20px;
-  color: #666;
-  font-size: 11px;
-  line-height: 1.5;
+.donate-link {
+  padding: 10px 18px;
+  background: var(--yellow);
+  color: var(--dark);
+  border-radius: 6px;
+  text-decoration: none;
 }
 
-/* Confetti stays above the page without blocking clicks */
+.disclaimer {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
 #confetti {
   position: fixed;
   inset: 0;
@@ -224,7 +385,6 @@ a {
   }
 }
 
-/* Mobile layout */
 @media (max-width: 480px) {
   body {
     padding: 12px;
@@ -237,10 +397,6 @@ a {
 
   .brand-logo {
     width: 180px;
-  }
-
-  h1 {
-    font-size: 34px;
   }
 
   .game-instructions,
@@ -259,16 +415,19 @@ a {
   .controls button {
     padding: 12px 18px;
   }
+
+  .mission-card {
+    padding: 16px;
+  }
 }
 
-/* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .water-can {
+  .water-can,
+  .confetti-piece {
     animation: none;
   }
 
-  .confetti-piece {
-    animation: none;
-    top: 20%;
+  .grid-cell:not(:disabled):active {
+    transform: none;
   }
 }

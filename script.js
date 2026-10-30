@@ -1,72 +1,141 @@
-// Game configuration
-const GOAL_CANS = 20;
-const GAME_SECONDS = 30;
-const SPAWN_SPEED = 850;
+// Each difficulty changes the goal, time, and item speed.
+const difficultyModes = {
+  easy: {
+    name: "Easy",
+    goal: 15,
+    seconds: 40,
+    spawnSpeed: 1200
+  },
+  normal: {
+    name: "Normal",
+    goal: 20,
+    seconds: 30,
+    spawnSpeed: 850
+  },
+  hard: {
+    name: "Hard",
+    goal: 25,
+    seconds: 25,
+    spawnSpeed: 650
+  }
+};
+
+// Milestone LevelUp: an array of messages and progress thresholds.
+const milestones = [
+  { progress: 0.25, message: "Great start! A quarter of the way there!" },
+  { progress: 0.5, message: "Halfway there! Keep collecting!" },
+  { progress: 0.75, message: "Almost there! You're making great progress!" },
+  {
+    progress: 1,
+    message: "Goal reached! Keep your score up until time runs out!"
+  }
+];
 
 // Game state
 let currentCans = 0;
 let gameActive = false;
+let soundEnabled = false;
 let spawnInterval;
 let timerInterval;
 let confettiTimeout;
-let endTime;
+let endTime = 0;
+let reachedMilestones = new Set();
 
 // HTML elements
 const grid = document.querySelector(".game-grid");
 const scoreDisplay = document.getElementById("current-cans");
 const timerDisplay = document.getElementById("timer");
+const goalDisplay = document.getElementById("goal");
 const achievements = document.getElementById("achievements");
 const startButton = document.getElementById("start-game");
 const resetButton = document.getElementById("reset-game");
+const difficultySelect = document.getElementById("difficulty");
+const levelDescription = document.getElementById("level-description");
+const progressBar = document.getElementById("progress-bar");
+const progressText = document.getElementById("progress-text");
+const soundButton = document.getElementById("sound-toggle");
+const collectSound = document.getElementById("collect-sound");
 const confetti = document.getElementById("confetti");
 
-// Random messages for winning and losing
 const winningMessages = [
   "You did it! You completed Water Quest!",
   "Amazing collecting! You reached the goal!",
-  "You won! Thanks for playing for clean water awareness!"
+  "You won! Keep the clean water conversation going!"
 ];
 
 const losingMessages = [
-  "Nice effort! Try again to reach 20 points.",
+  "Nice effort! Try again or choose an easier difficulty.",
   "Keep practicing! Those yellow cans are waiting.",
-  "Time’s up! Give Water Quest another try!"
+  "Time's up! Give Water Quest another try!"
 ];
 
-// Create the 3 × 3 grid
+function getMode() {
+  return difficultyModes[difficultySelect.value];
+}
+
+function randomMessage(messages) {
+  return messages[Math.floor(Math.random() * messages.length)];
+}
+
+// Create nine buttons once to keep the board stable.
 function createGrid() {
-  grid.innerHTML = "";
+  grid.replaceChildren();
 
   for (let i = 0; i < 9; i++) {
     const cell = document.createElement("button");
 
     cell.type = "button";
     cell.className = "grid-cell";
-    cell.disabled = true;
-    cell.setAttribute("aria-label", `Empty space ${i + 1}`);
+    clearCell(cell, i);
 
-    cell.addEventListener("click", () => {
-      collectItem(cell);
-    });
+    cell.addEventListener("click", () => collectItem(cell));
 
     grid.appendChild(cell);
   }
 }
 
-// Clear all items from the grid
-function clearGrid() {
-  const cells = document.querySelectorAll(".grid-cell");
+// Remove an item's DOM elements after collection or expiration.
+function clearCell(cell, index) {
+  cell.replaceChildren();
+  cell.dataset.item = "";
+  cell.className = "grid-cell";
+  cell.disabled = true;
 
-  cells.forEach((cell, index) => {
-    cell.innerHTML = "";
-    cell.dataset.item = "";
-    cell.className = "grid-cell";
-    cell.disabled = true;
-    cell.setAttribute("aria-label", `Empty space ${index + 1}`);
+  const label = index === undefined
+    ? "Empty space"
+    : `Empty space ${index + 1}`;
+
+  cell.setAttribute("aria-label", label);
+}
+
+function clearGrid() {
+  Array.from(grid.children).forEach((cell, index) => {
+    clearCell(cell, index);
   });
 }
 
-// Spawn a can and dirty water in separate cells
+function updateProgress() {
+  const mode = getMode();
+
+  scoreDisplay.textContent = currentCans;
+  goalDisplay.textContent = mode.goal;
+  progressText.textContent = `${currentCans} / ${mode.goal}`;
+
+  progressBar.max = mode.goal;
+  progressBar.value = Math.min(currentCans, mode.goal);
+  progressBar.textContent = `${currentCans} / ${mode.goal}`;
+}
+
+function playCollectSound() {
+  if (!soundEnabled) return;
+
+  collectSound.currentTime = 0;
+
+  // Missing files or blocked audio should never interrupt gameplay.
+  collectSound.play().catch(() => {});
+}
+
+// Show one yellow can and one dirty-water item.
 function spawnWaterCan() {
   if (!gameActive) return;
 
@@ -77,27 +146,21 @@ function spawnWaterCan() {
 
   clearGrid();
 
-  const cells = document.querySelectorAll(".grid-cell");
-
+  const cells = Array.from(grid.children);
   const canIndex = Math.floor(Math.random() * cells.length);
-
-  // A nonzero offset keeps dirty water in a different cell
   const offset = Math.floor(Math.random() * (cells.length - 1)) + 1;
   const dirtyIndex = (canIndex + offset) % cells.length;
 
   const canCell = cells[canIndex];
 
-  // Uses the water-can image from your img folder
-  canCell.innerHTML = `
-    <img
-      class="water-can"
-      src="img/water-can-transparent.png"
-      alt=""
-      aria-hidden="true"
-      draggable="false"
-    >
-  `;
+  const canImage = document.createElement("img");
+  canImage.className = "water-can";
+  canImage.src = "img/water-can-transparent.png";
+  canImage.alt = "";
+  canImage.draggable = false;
+  canImage.setAttribute("aria-hidden", "true");
 
+  canCell.appendChild(canImage);
   canCell.dataset.item = "can";
   canCell.classList.add("has-can");
   canCell.disabled = false;
@@ -105,81 +168,91 @@ function spawnWaterCan() {
 
   const dirtyCell = cells[dirtyIndex];
 
-  dirtyCell.innerHTML = `
-    <span class="dirty-water" aria-hidden="true">💧</span>
-    <span class="dirty-label" aria-hidden="true">DIRTY</span>
-  `;
+  const drop = document.createElement("span");
+  drop.className = "dirty-water";
+  drop.textContent = "💧";
+  drop.setAttribute("aria-hidden", "true");
 
+  const label = document.createElement("span");
+  label.className = "dirty-label";
+  label.textContent = "DIRTY";
+  label.setAttribute("aria-hidden", "true");
+
+  dirtyCell.append(drop, label);
   dirtyCell.dataset.item = "dirty";
   dirtyCell.classList.add("has-dirty-water");
   dirtyCell.disabled = false;
   dirtyCell.setAttribute("aria-label", "Dirty water: lose 1 point");
 }
 
-// Handle clicks on game items
 function collectItem(cell) {
   if (!gameActive) return;
 
-  // Prevent scoring after time runs out
   if (Date.now() >= endTime) {
     endGame();
     return;
   }
 
   const item = cell.dataset.item;
-
   if (!item) return;
+
+  // Remove the item immediately to prevent repeat collection.
+  clearCell(cell);
+
+  achievements.className = "achievement";
 
   if (item === "can") {
     currentCans += 1;
+    playCollectSound();
 
-    if (currentCans === GOAL_CANS) {
-      achievements.textContent =
-        "20 points! Keep your score at 20 or higher until time runs out!";
-    } else {
-      achievements.textContent = "+1! Nice catch!";
-    }
+    const mode = getMode();
+    let message = "+1! Nice catch!";
+
+    milestones.forEach((milestone, index) => {
+      const threshold = Math.ceil(mode.goal * milestone.progress);
+
+      if (
+        currentCans >= threshold &&
+        !reachedMilestones.has(index)
+      ) {
+        reachedMilestones.add(index);
+        message = milestone.message;
+      }
+    });
+
+    achievements.textContent = message;
   } else {
-    // Score cannot fall below zero
     currentCans = Math.max(0, currentCans - 1);
-    achievements.textContent = "Dirty water! −1 point.";
+    achievements.textContent = "Dirty water! −1 point. Watch for yellow cans.";
+    achievements.classList.add("warning");
   }
 
-  scoreDisplay.textContent = currentCans;
-
-  // Remove the item so the same can cannot be collected twice
-  cell.innerHTML = "";
-  cell.dataset.item = "";
-  cell.className = "grid-cell";
-  cell.disabled = true;
-  cell.setAttribute("aria-label", "Empty space");
+  updateProgress();
 }
 
-// Stop old timers before ending or resetting
 function stopTimers() {
   clearInterval(spawnInterval);
   clearInterval(timerInterval);
   clearTimeout(confettiTimeout);
 }
 
-// Start a new 30-second game
 function startGame() {
   if (gameActive) return;
 
   resetGame();
 
+  const mode = getMode();
+
   gameActive = true;
   startButton.disabled = true;
+  difficultySelect.disabled = true;
 
-  endTime = Date.now() + GAME_SECONDS * 1000;
+  endTime = Date.now() + mode.seconds * 1000;
 
-  achievements.textContent =
-    "Go! Collect yellow cans and avoid dirty water.";
+  achievements.textContent = "Go! Collect yellow cans and avoid dirty water.";
 
-  // Show the first items immediately
   spawnWaterCan();
-
-  spawnInterval = setInterval(spawnWaterCan, SPAWN_SPEED);
+  spawnInterval = setInterval(spawnWaterCan, mode.spawnSpeed);
 
   timerInterval = setInterval(() => {
     const secondsLeft = Math.max(
@@ -188,6 +261,7 @@ function startGame() {
     );
 
     timerDisplay.textContent = secondsLeft;
+    timerDisplay.classList.toggle("time-warning", secondsLeft <= 5);
 
     if (secondsLeft === 0) {
       endGame();
@@ -195,63 +269,76 @@ function startGame() {
   }, 100);
 }
 
-// End the round and choose a random result message
 function endGame() {
   if (!gameActive) return;
 
-  gameActive = false;
+  const mode = getMode();
+  const playerWon = currentCans >= mode.goal;
 
+  gameActive = false;
   stopTimers();
   clearGrid();
 
   timerDisplay.textContent = 0;
+  timerDisplay.classList.remove("time-warning");
+
   startButton.disabled = false;
   startButton.textContent = "Play Again";
+  difficultySelect.disabled = false;
 
-  const playerWon = currentCans >= GOAL_CANS;
+  achievements.className = playerWon
+    ? "achievement success"
+    : "achievement warning";
 
-  const messages = playerWon
-    ? winningMessages
-    : losingMessages;
-
-  const randomIndex = Math.floor(Math.random() * messages.length);
+  const message = randomMessage(
+    playerWon ? winningMessages : losingMessages
+  );
 
   achievements.textContent =
-    `${messages[randomIndex]} Final score: ${currentCans}.`;
+    `${message} Final score: ${currentCans}/${mode.goal} (${mode.name}).`;
 
   if (playerWon) {
     celebrateWin();
   }
 }
 
-// Reset the score, timer, board, and celebration
 function resetGame() {
   stopTimers();
 
+  const mode = getMode();
+
   gameActive = false;
   currentCans = 0;
+  reachedMilestones = new Set();
 
-  scoreDisplay.textContent = 0;
-  timerDisplay.textContent = GAME_SECONDS;
+  timerDisplay.textContent = mode.seconds;
+  timerDisplay.classList.remove("time-warning");
 
+  levelDescription.textContent =
+    `${mode.name}: finish with at least ${mode.goal} points ` +
+    `after ${mode.seconds} seconds.`;
+
+  achievements.className = "achievement";
   achievements.textContent = "Press Start Game to play!";
 
   startButton.disabled = false;
   startButton.textContent = "Start Game";
+  difficultySelect.disabled = false;
+
+  collectSound.pause();
+  collectSound.currentTime = 0;
 
   confetti.replaceChildren();
-
-  createGrid();
+  clearGrid();
+  updateProgress();
 }
 
-// Celebrate winning with confetti
 function celebrateWin() {
-  const colors = [
-    "#FFC907",
-    "#2E9DF7",
-    "#4FCB53",
-    "#FF902A"
-  ];
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  const colors = ["#FFC907", "#2E9DF7", "#4FCB53", "#FF902A"];
 
   for (let i = 0; i < 50; i++) {
     const piece = document.createElement("span");
@@ -269,9 +356,22 @@ function celebrateWin() {
   }, 2600);
 }
 
-// Connect buttons to their functions
+soundButton.addEventListener("click", () => {
+  soundEnabled = !soundEnabled;
+
+  soundButton.textContent = soundEnabled ? "Sound: On" : "Sound: Off";
+  soundButton.setAttribute("aria-pressed", String(soundEnabled));
+
+  if (soundEnabled) {
+    playCollectSound();
+  } else {
+    collectSound.pause();
+  }
+});
+
 startButton.addEventListener("click", startGame);
 resetButton.addEventListener("click", resetGame);
+difficultySelect.addEventListener("change", resetGame);
 
-// Prepare the board when the page loads
+createGrid();
 resetGame();

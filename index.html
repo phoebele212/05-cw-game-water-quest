@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Water Quest</title>
+  <title>Water Quest | Clean Water Challenge</title>
 
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
@@ -17,24 +17,54 @@
       alt="charity: water"
     >
 
+    <p class="eyebrow">A small game. A meaningful mission.</p>
     <h1>Water Quest</h1>
 
     <p class="game-instructions">
-      Collect at least <strong>20 points</strong> in 30 seconds!
+      Collect yellow cans and avoid dirty water!
       <br>
-      Yellow cans: +1 point · Dirty water: −1 point
+      Yellow cans: <strong>+1 point</strong> · Dirty water:
+      <strong>−1 point</strong>
     </p>
+
+    <div class="settings">
+      <div class="difficulty-setting">
+        <label for="difficulty">Choose your challenge</label>
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+
+      <button id="sound-toggle" type="button" aria-pressed="false">
+        Sound: Off
+      </button>
+    </div>
+
+    <p id="level-description" class="level-description"></p>
 
     <div class="stats">
       <p>Score: <span id="current-cans">0</span></p>
-      <p>Time Left: <span id="timer">30</span>s</p>
+      <p>Goal: <span id="goal">20</span></p>
+      <p>Time: <span id="timer">30</span>s</p>
     </div>
+
+    <div class="progress-heading">
+      <span>Collection progress</span>
+      <span id="progress-text">0 / 20</span>
+    </div>
+
+    <progress id="progress-bar" value="0" max="20">
+      0 / 20
+    </progress>
 
     <div
       id="achievements"
       class="achievement"
       role="status"
       aria-live="polite"
+      aria-atomic="true"
     >
       Press Start Game to play!
     </div>
@@ -46,23 +76,44 @@
       <button id="reset-game" type="button">Reset</button>
     </div>
 
-    <p class="mission">
-      Inspired by charity: water’s mission to bring clean and safe
-      drinking water to people around the world.
-    </p>
+    <section class="mission-card" aria-labelledby="mission-heading">
+      <h2 id="mission-heading">Keep the impact going</h2>
+      <p>
+        Clean water matters beyond this game. charity: water works
+        to bring clean and safe drinking water to people around the world.
+        Learn about the mission or support the real work.
+      </p>
+    </section>
 
-    <a
-      href="https://www.charitywater.org/"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Learn about charity: water
-    </a>
+    <footer>
+      <div class="footer-links">
+        <a
+          href="https://www.charitywater.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Explore charity: water ↗
+        </a>
 
-    <p class="disclaimer">
-      Independent student game prototype. Game points do not represent donations.
-    </p>
+        <a
+          class="donate-link"
+          href="https://www.charitywater.org/donate"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Donate ↗
+        </a>
+      </div>
+
+      <p class="disclaimer">
+        Independent student game. Not affiliated with charity: water.
+        Game points do not represent donations or real water delivered.
+      </p>
+    </footer>
   </main>
+
+  <!-- Download a short audio clip and save it at this path. -->
+  <audio id="collect-sound" preload="none" src="audio/collect.mp3"></audio>
 
   <div id="confetti" aria-hidden="true"></div>
 </body>
